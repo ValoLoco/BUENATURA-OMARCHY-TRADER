@@ -16,7 +16,13 @@ import time
 # Configuration
 WEBHOOK_PORT = int(os.environ.get("TRADINGVIEW_WEBHOOK_PORT", "8080"))
 DATA_FILE = os.environ.get("TRADINGVIEW_DATA_FILE", "/tmp/tradingview-signals.json")
-ALLOWED_SYMBOLS = os.environ.get("TRADINGVIEW_SYMBOLS", "BTCUSDT,ETHUSDT,AAPL").split(",")
+_raw_symbols = os.environ.get("TRADINGVIEW_SYMBOLS")
+if _raw_symbols is None or _raw_symbols.strip() == "":
+    ALLOWED_SYMBOLS = None  # means allow all
+else:
+    # Split by comma, strip whitespace, ignore empty entries
+    symbols = [s.strip() for s in _raw_symbols.split(",") if s.strip() != ""]
+    ALLOWED_SYMBOLS = symbols if symbols else None  # if list empty after filtering, allow all
 
 class WebhookHandler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -46,8 +52,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     signal = 'HOLD'
             
             if symbol and signal:
-                # Validate symbol
-                if symbol in ALLOWED_SYMBOLS or not ALLOWED_SYMBOLS:
+                # Validate symbol if a filter is set
+                if ALLOWED_SYMBOLS is None or symbol in ALLOWED_SYMBOLS:
                     # Write to data file for QML service
                     data = {
                         'symbol': symbol,
@@ -65,6 +71,11 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({'status': 'ok', 'signal': signal}).encode())
                     print(f"Received webhook: {symbol} -> {signal}")
+                    return
+                else:
+                    self.send_response(403)
+                    self.end_headers()
+                    self.wfile.write(f'Symbol {symbol} not allowed'.encode())
                     return
             
             self.send_response(400)
@@ -96,7 +107,10 @@ def run_server():
     server = HTTPServer(('localhost', WEBHOOK_PORT), WebhookHandler)
     print(f"TradingView webhook receiver running on http://localhost:{WEBHOOK_PORT}")
     print(f"Writing signals to: {DATA_FILE}")
-    print(f"Allowed symbols: {ALLOWED_SYMBOLS}")
+    if ALLOWED_SYMBOLS is None:
+        print("Allowed symbols: any")
+    else:
+        print(f"Allowed symbols: {ALLOWED_SYMBOLS}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
