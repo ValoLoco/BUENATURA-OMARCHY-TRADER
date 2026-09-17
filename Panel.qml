@@ -8,9 +8,11 @@ BarWidget {
     id: root
     moduleName: "io.github.ValoLoco.tradingview-signals"
 
+    Console.log("TradingView Signals plugin loaded")
+
     property string signal: setting("signal", "HOLD")
-    property string symbol: setting("symbol", "BTCUSDT")
-    property string timeframe: setting("timeframe", "15m")
+    property string symbol: setting("symbol", "NQ1")
+    property string timeframe: setting("timeframe", "5m")
     property color buyColor: setting("buyColor", "#00ff00")
     property color sellColor: setting("sellColor", "#ff0000")
     property color holdColor: setting("holdColor", "#ffff00")
@@ -21,20 +23,42 @@ BarWidget {
         else return holdColor
     }
 
-    implicitWidth: 60
+    implicitWidth: 100
     implicitHeight: barSize
 
     Rectangle {
+        id: background
         anchors.fill: parent
-        color: "#ff00ff" // magenta to stand out
+        color: root.signalColor
         radius: 4
     }
 
+    // TradingView logo image (try to load from web, fallback to text)
+    Image {
+        id: logoImage
+        source: "https://www.tradingview.com/favicon.ico"
+        anchors.centerIn: parent
+        width: 20
+        height: 20
+        fillMode: Image.PreserveAspectFit
+        asynchronous: true
+        cache: false
+        onStatusChanged: {
+            if (status === Image.Error) {
+                // If image fails to load, show fallback text
+                fallbackText.visible = true
+                logoImage.visible = false
+            }
+        }
+    }
+
     Text {
-        text: root.signal
-        color: "#000000"
+        id: fallbackText
+        text: "TV"
+        color: "#ffffff"
         font.pixelSize: Style.font.body
         anchors.centerIn: parent
+        visible: false
     }
 
     MouseArea {
@@ -42,14 +66,13 @@ BarWidget {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            console.log("Clicked tradingview widget")
-            Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + root.symbol)
+            console.log("TradingView widget clicked")
+            Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + root.symbol + "&interval=" + root.timeframe)
         }
         onEntered: if (root.bar) root.bar.showTooltip(root, "TradingView: " + root.symbol + " " + root.timeframe + " — " + root.signal)
         onExited: if (root.bar) root.bar.hideTooltip(root)
     }
 
-    Component.onCompleted: {
-        console.log("TradingView Signals plugin loaded")
-    }
+    // Update background color when signal changes
+    onSignal: background.color = root.signalColor
 }

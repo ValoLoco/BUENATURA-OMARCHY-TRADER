@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.ValoLoco.tradingview-signals",
   "name": "TradingView Signals",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "ValoLoco",
   "license": "MIT",
   "description": "Omarchy TradingView and Pine Script signal plugin for top-bar alerts and trading workflow notifications.",
@@ -23,14 +23,14 @@
         "id": "symbol",
         "type": "string",
         "label": "Trading Symbol",
-        "default": "BTCUSDT",
+        "default": "NQ1",
         "description": "TradingView symbol (e.g., BTCUSDT, ETHUSDT, AAPL)"
       },
       {
         "id": "timeframe",
         "type": "string",
         "label": "Timeframe",
-        "default": "15m",
+        "default": "5m",
         "description": "Chart timeframe for signal analysis"
       },
       {
