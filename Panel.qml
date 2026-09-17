@@ -13,12 +13,14 @@ BarWidget {
 
     Rectangle {
         anchors.fill: parent
-        color: "red"
+        color: "#ffff00" // bright yellow
+        radius: 4
     }
 
     Text {
         text: "TV"
-        color: "white"
+        color: "#000000"
+        font.pixelSize: Style.font.body
         anchors.centerIn: parent
     }
 
