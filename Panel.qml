@@ -26,7 +26,7 @@ BarWidget {
 
     Rectangle {
         anchors.fill: parent
-        color: root.signalColor
+        color: "#ff00ff" // magenta to stand out
         radius: 4
     }
 
@@ -42,9 +42,14 @@ BarWidget {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            console.log("Clicked tradingview widget")
             Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + root.symbol)
         }
         onEntered: if (root.bar) root.bar.showTooltip(root, "TradingView: " + root.symbol + " " + root.timeframe + " — " + root.signal)
         onExited: if (root.bar) root.bar.hideTooltip(root)
+    }
+
+    Component.onCompleted: {
+        console.log("TradingView Signals plugin loaded")
     }
 }
