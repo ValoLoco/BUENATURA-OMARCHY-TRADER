@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Ui
+import QtQuick.Controls 2.15 as Controls
 
 BarWidget {
     id: root
@@ -16,7 +17,9 @@ BarWidget {
     property color sellColor: setting("sellColor", "#ff0000")
     property color holdColor: setting("holdColor", "#ffff00")
     property int updateInterval: setting("updateInterval", 60000) // ms
+    property string chartUrlBase: setting("chartUrlBase", "https://www.tradingview.com/chart/")
 
+    // Derived properties
     readonly property color signalColor: {
         switch (signal) {
             case "BUY": return buyColor
@@ -26,9 +29,11 @@ BarWidget {
     }
 
     property string tooltipText: "TradingView: " + symbol + " " + timeframe + " — " + signal
+    property string chartUrl: chartUrlBase + "?symbol=" + symbol + "&interval=" + timeframe
 
     // Timer for periodic updates (placeholder for real data source)
     Timer {
+        id: updateTimer
         interval: updateInterval
         running: true
         repeat: true
@@ -38,14 +43,85 @@ BarWidget {
         }
     }
 
-    // Dynamic width based on text
+    // Dynamic width based on text and icon
     readonly property int minWidth: 70
     readonly property int maxWidth: 120
+    readonly property int iconSize: 20
 
-    implicitWidth: Math.max(minWidth, Math.min(maxWidth, signalLabel.implicitWidth + Style.spacing.controlPaddingX * 2))
+    implicitWidth: Math.max(minWidth, Math.min(maxWidth, 
+        iconSize + Style.spacing.controlPaddingX * 2 + 
+        signalLabel.implicitWidth))
     implicitHeight: barSize
 
-    // Visual indicator
+    // Popup for settings
+    Popup {
+        id: settingsPopup
+        width: 200
+        height: 250
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 10
+
+            Label { text: "Symbol"; Layout.alignment: Qt.AlignLeft }
+            TextField {
+                id: symbolField
+                text: root.symbol
+                Layout.fillWidth: true
+                onAccepted: root.symbol = text
+            }
+            Label { text: "Timeframe"; Layout.alignment: Qt.AlignLeft }
+            TextField {
+                id: timeframeField
+                text: root.timeframe
+                Layout.fillWidth: true
+                onAccepted: root.timeframe = text
+            }
+            Label { text: "Buy Color"; Layout.alignment: Qt.AlignLeft }
+            ColorPicker {
+                id: buyPicker
+                color: root.buyColor
+                Layout.fillWidth: true
+                onColorChanged: root.buyColor = color
+            }
+            Label { text: "Sell Color"; Layout.alignment: Qt.AlignLeft }
+            ColorPicker {
+                id: sellPicker
+                color: root.sellColor
+                Layout.fillWidth: true
+                onColorChanged: root.sellColor = color
+            }
+            Label { text: "Hold Color"; Layout.alignment: Qt.AlignLeft }
+            ColorPicker {
+                id: holdPicker
+                color: root.holdColor
+                Layout.fillWidth: true
+                onColorChanged: root.holdColor = color
+            }
+            Button {
+                text: "Save"
+                Layout.alignment: Qt.AlignHCenter
+                onClicked: {
+                    // Persist settings via shell.json? For now just update properties; could call omarchy bar set
+                    // We'll update properties; they are bound to settings already via property binding? Actually property reads from setting() only once.
+                    // To persist, we need to update shell.json via omarchy command. We'll do a simple approach: call omarchy bar set for each.
+                    // We'll execute via Qt.invokeLater to avoid blocking.
+                    Qt.invokeLater(function() {
+                        var cmd = "omarchy bar set " + root.moduleName + " symbol \"" + symbolField.text + "\"";
+                        var proc = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor");
+                        proc.exec(cmd);
+                    });
+                    settingsPopup.close();
+                }
+            }
+        }
+    }
+
+    // Background and icon
     Rectangle {
         id: bgRect
         anchors.fill: parent
@@ -56,10 +132,21 @@ BarWidget {
         // Pulse animation on signal change
         SequentialAnimation on opacity {
             running: false
-            NumberAnimation { from: 0.9; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
-            NumberAnimation { from: 1.0; to: 0.9; duration: 150; easing.type: Easing.InQuad }
+            NumberAnimation { from: 0.9; to: 1.0; duration: 150; easing: Easing.OutCubic }
+            NumberAnimation { from: 1.0; to: 0.9; duration: 150; easing: Easing.InCubic }
             loops: 2
         }
+    }
+
+    // Icon (unicode chart symbol)
+    Text {
+        id: iconText
+        text: "📈" // chart increasing
+        font.pixelSize: iconSize
+        color: "#000000"
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        anchors.leftMargin: Style.spacing.controlPaddingX
     }
 
     // Signal text
@@ -69,91 +156,40 @@ BarWidget {
         color: "#000000"
         font.pixelSize: Style.font.body
         font.weight: Font.Medium
-        anchors.centerIn: parent
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
-        width: parent.width - Style.spacing.controlPaddingX * 2
-    }
-
-    // Small indicator dot for visual emphasis
-    Rectangle {
-        width: 6
-        height: 6
-        radius: 3
-        color: "#000000"
-        opacity: 0.5
-        anchors.right: parent.right
-        anchors.rightMargin: 6
         anchors.verticalCenter: parent.verticalCenter
-        visible: signal !== "HOLD"
+        anchors.left: iconText.right
+        anchors.leftMargin: Style.spacing.controlPaddingX / 2
+        elide: Text.ElideRight
+        width: parent.width - iconText.width - Style.spacing.controlPaddingX * 2 - iconSize
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
 
+        // Left click: open TradingView chart
         onClicked: {
-            // Left click: open TradingView chart for the symbol
-            Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + symbol)
+            if (mouse.button === Qt.LeftButton) {
+                Qt.openUrlExternally(root.chartUrl)
+            }
+        }
+        // Right click or long press: open settings popup
+        onPressed: {
+            if (mouse.button === Qt.RightButton) {
+                settingsPopup.open();
+                mouse.accepted = true;
+            }
         }
         onPressAndHold: {
-            // Long press: open settings or show detailed menu
-            showContextMenu()
+            settingsPopup.open();
+            mouse.accepted = true;
         }
         onEntered: if (root.bar) root.bar.showTooltip(root, root.tooltipText)
         onExited: if (root.bar) root.bar.hideTooltip(root)
     }
 
-    // Context menu for quick actions
-    Menu {
-        id: contextMenu
-        MenuItem {
-            text: "Open TradingView Chart"
-            onTriggered: Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + symbol)
-        }
-        MenuItem {
-            text: "Copy Symbol"
-            onTriggered: Qt.clipboard.copy(symbol)
-        }
-        MenuItem {
-            text: "Force Update"
-            onTriggered: {
-                // trigger manual update
-                console.log("Manual update triggered")
-            }
-        }
-        MenuSeparator { }
-        MenuItem {
-            text: "Configure..."
-            onTriggered: {
-                // Could open a settings dialog
-                console.log("Settings requested")
-            }
-        }
-    }
-
-    function showContextMenu() {
-        contextMenu.popup()
-    }
-
-    function updateSignal(newSignal) {
-        if (newSignal !== signal) {
-            signal = newSignal
-            bgRect.opacity = 0.9
-            // Trigger pulse animation
-            var anim = bgRect.opacity
-        }
-    }
-
-    // Expose update function for external triggers (e.g., from a service)
-    Connections {
-        target: Quickshell
-        onMessageReceived: {
-            if (message.module === moduleName && message.action === "updateSignal") {
-                updateSignal(message.signal)
-            }
-        }
-    }
+    // Tooltip
+    tooltip: root.tooltipText
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.ValoLoco.tradingview-signals",
   "name": "TradingView Signals",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "ValoLoco",
   "license": "MIT",
   "description": "Omarchy TradingView and Pine Script signal plugin for top-bar alerts and trading workflow notifications.",
