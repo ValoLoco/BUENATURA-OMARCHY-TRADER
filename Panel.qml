@@ -18,6 +18,7 @@ BarWidget {
     property color holdColor: setting("holdColor", "#ffff00")
     property int updateInterval: setting("updateInterval", 60000) // ms
     property string chartUrlBase: setting("chartUrlBase", "https://www.tradingview.com/chart/")
+    property string dataFile: setting("dataFile", "/tmp/tradingview-signals.json")
 
     // Derived properties
     readonly property color signalColor: {
@@ -31,15 +32,47 @@ BarWidget {
     property string tooltipText: "TradingView: " + symbol + " " + timeframe + " — " + signal
     property string chartUrl: chartUrlBase + "?symbol=" + symbol + "&interval=" + timeframe
 
-    // Timer for periodic updates (placeholder for real data source)
+    // Timer to read signal data from file
     Timer {
-        id: updateTimer
-        interval: updateInterval
+        id: dataTimer
+        interval: root.updateInterval
         running: true
         repeat: true
-        onTriggered: {
-            // Placeholder: In production, fetch from Pine Script webhook, TradingView API, or local file
-            // updateSignal()
+        onTriggered: readSignalData()
+    }
+
+    function readSignalData() {
+        try {
+            var file = new File(root.dataFile)
+            if (!file.exists) {
+                console.log("Data file does not exist:", root.dataFile)
+                return
+            }
+            if (!file.open(File.ReadOnly)) {
+                console.log("Cannot open data file for reading:", root.dataFile)
+                return
+            }
+            var content = file.readAll()
+            file.close()
+            if (!content) {
+                console.log("Empty data file")
+                return
+            }
+            var data = JSON.parse(content)
+            // Validate symbol matches our configured symbol (optional)
+            if (data.symbol && data.symbol !== root.symbol) {
+                // Ignore signals for other symbols
+                return
+            }
+            if (data.signal && ["BUY", "SELL", "HOLD"].includes(data.signal)) {
+                if (data.signal !== root.signal) {
+                    root.signal = data.signal
+                    // Trigger pulse animation via opacity
+                    bgRect.opacity = 0.9
+                }
+            }
+        } catch (e) {
+            console.log("Error reading signal data:", e.message)
         }
     }
 
@@ -206,4 +239,9 @@ BarWidget {
 
     // Tooltip
     tooltip: root.tooltipText
+
+    // Initialize: read data immediately on startup
+    Component.onCompleted: {
+        readSignalData()
+    }
 }

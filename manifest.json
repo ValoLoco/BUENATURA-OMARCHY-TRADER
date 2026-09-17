@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.ValoLoco.tradingview-signals",
   "name": "TradingView Signals",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "ValoLoco",
   "license": "MIT",
   "description": "Omarchy TradingView and Pine Script signal plugin for top-bar alerts and trading workflow notifications.",
@@ -67,6 +67,13 @@
         "label": "TradingView Chart URL Base",
         "default": "https://www.tradingview.com/chart/",
         "description": "Base URL for TradingView charts (can be changed for different regions or embeds)"
+      },
+      {
+        "id": "dataFile",
+        "type": "string",
+        "label": "Signal Data File",
+        "default": "/tmp/tradingview-signals.json",
+        "description": "File where the webhook receiver writes signal data (JSON with symbol, signal, timestamp, price, timeframe)"
       }
     ]
   }
