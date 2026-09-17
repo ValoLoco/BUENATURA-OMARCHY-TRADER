@@ -106,14 +106,28 @@ BarWidget {
                 text: "Save"
                 Layout.alignment: Qt.AlignHCenter
                 onClicked: {
-                    // Persist settings via shell.json? For now just update properties; could call omarchy bar set
-                    // We'll update properties; they are bound to settings already via property binding? Actually property reads from setting() only once.
-                    // To persist, we need to update shell.json via omarchy command. We'll do a simple approach: call omarchy bar set for each.
-                    // We'll execute via Qt.invokeLater to avoid blocking.
+                    // Persist settings via omarchy bar set commands
                     Qt.invokeLater(function() {
-                        var cmd = "omarchy bar set " + root.moduleName + " symbol \"" + symbolField.text + "\"";
-                        var proc = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor");
-                        proc.exec(cmd);
+                        // Symbol
+                        var cmd1 = "omarchy bar set " + root.moduleName + " symbol \\\"" + symbolField.text + "\\\"";
+                        var proc1 = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor1");
+                        proc1.exec(cmd1);
+                        // Timeframe
+                        var cmd2 = "omarchy bar set " + root.moduleName + " timeframe \\\"" + timeframeField.text + "\\\"";
+                        var proc2 = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor2");
+                        proc2.exec(cmd2);
+                        // Buy Color
+                        var cmd3 = "omarchy bar set " + root.moduleName + " buyColor \\\"" + buyPicker.color + "\\\"";
+                        var proc3 = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor3");
+                        proc3.exec(cmd3);
+                        // Sell Color
+                        var cmd4 = "omarchy bar set " + root.moduleName + " sellColor \\\"" + sellPicker.color + "\\\"";
+                        var proc4 = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor4");
+                        proc4.exec(cmd4);
+                        // Hold Color
+                        var cmd5 = "omarchy bar set " + root.moduleName + " holdColor \\\"" + holdPicker.color + "\\\"";
+                        var proc5 = Qt.createQmlObject('import QtQuick 2.15; QtObject { function exec(cmd) { var proc = Qt.createProcess("sh"); proc.args = ["-c", cmd]; proc.start(); } }', root, "cmdExecutor5");
+                        proc5.exec(cmd5);
                     });
                     settingsPopup.close();
                 }

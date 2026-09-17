@@ -60,6 +60,13 @@
         "label": "Update Interval (ms)",
         "default": 60000,
         "description": "How often to check for signal updates"
+      },
+      {
+        "id": "chartUrlBase",
+        "type": "string",
+        "label": "TradingView Chart URL Base",
+        "default": "https://www.tradingview.com/chart/",
+        "description": "Base URL for TradingView charts (can be changed for different regions or embeds)"
       }
     ]
   }
