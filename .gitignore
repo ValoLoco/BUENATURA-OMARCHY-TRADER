@@ -1,0 +1,5 @@
+node_modules/
+dist/
+gateway/config.json
+gateway/data/
+.env
