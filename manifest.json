@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.ValoLoco.tradingview-signals",
+  "name": "TradingView Signals",
+  "version": "0.1.0",
+  "author": "ValoLoco",
+  "license": "MIT",
+  "description": "Omarchy TradingView and Pine Script signal plugin for top-bar alerts and trading workflow notifications.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "TradingView Signals",
+    "description": "Shows TradingView signals and allows trading workflow notifications",
+    "category": "Trading",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
