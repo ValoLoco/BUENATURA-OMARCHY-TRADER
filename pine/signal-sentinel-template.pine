@@ -1,0 +1,28 @@
+//@version=6
+strategy("BUENATURA Signal Sentinel Template", overlay = true, calc_on_every_tick = false)
+
+webhookSecret = input.string("REPLACE_LOCALLY", "Webhook secret")
+strategyId = input.string("sierra618-nq-5m", "Strategy ID")
+
+// Replace these placeholders with your tested, bar-close-confirmed conditions.
+longCondition = false
+shortCondition = false
+
+makePayload(action, stopPrice, targetPrice) =>
+    '{"secret":"' + webhookSecret +
+    '","event":"signal"' +
+    ',"strategy":"' + strategyId +
+    '","symbol":"' + syminfo.tickerid +
+    '","timeframe":"' + timeframe.period +
+    '","action":"' + action +
+    '","price":' + str.tostring(close) +
+    ',"stop":' + str.tostring(stopPrice) +
+    ',"target":' + str.tostring(targetPrice) +
+    ',"timestamp":' + str.tostring(time) +
+    ',"barClose":true}'
+
+if barstate.isconfirmed and longCondition
+    alert(makePayload("long", na, na), alert.freq_once_per_bar_close)
+
+if barstate.isconfirmed and shortCondition
+    alert(makePayload("short", na, na), alert.freq_once_per_bar_close)

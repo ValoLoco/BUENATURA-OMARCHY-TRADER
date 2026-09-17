@@ -1,0 +1,15 @@
+{
+  "port": 8787,
+  "webhookSecret": "replace-with-a-long-random-secret",
+  "signalTtlSeconds": 90,
+  "strategies": [
+    {
+      "id": "sierra618-nq-5m",
+      "name": "Sierra618 NQ 5m",
+      "enabled": true,
+      "symbols": ["CME_MINI:NQ1!"],
+      "timeframes": ["5"],
+      "chartUrl": "https://www.tradingview.com/"
+    }
+  ]
+}

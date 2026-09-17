@@ -1,0 +1,7 @@
+{
+  "id": "buenatura.omarchy-trader",
+  "name": "BUENATURA Omarchy Trader",
+  "version": "0.1.0",
+  "description": "Displays local TradingView signal status in Omarchy.",
+  "main": "Main.qml"
+}
