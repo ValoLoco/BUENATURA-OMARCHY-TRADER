@@ -77,8 +77,8 @@ BarWidget {
     }
 
     // Dynamic width based on text and icon
-    readonly property int minWidth: 70
-    readonly property int maxWidth: 120
+    readonly property int minWidth: 100 // increased for visibility
+    readonly property int maxWidth: 140
     readonly property int iconSize: 20
 
     implicitWidth: Math.max(minWidth, Math.min(maxWidth, 
@@ -89,8 +89,8 @@ BarWidget {
     // Popup for settings
     Popup {
         id: settingsPopup
-        width: 200
-        height: 250
+        width: 220
+        height: 260
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -175,6 +175,8 @@ BarWidget {
         color: root.signalColor
         radius: 4
         opacity: 0.9
+        border.color: "#ffffff"
+        border.width: 1
 
         // Pulse animation on signal change
         SequentialAnimation on opacity {
