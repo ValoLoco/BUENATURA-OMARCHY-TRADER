@@ -8,53 +8,152 @@ BarWidget {
     id: root
     moduleName: "io.github.ValoLoco.tradingview-signals"
 
-    // Default signal state
-    property string signal: "HOLD" // BUY, SELL, HOLD
-    property color signalColor: "#ffff00" // Yellow for HOLD
-    property string tooltipText: "Click to open TradingView"
+    // Configuration properties (can be overridden via shell.json settings)
+    property string signal: setting("signal", "HOLD")
+    property string symbol: setting("symbol", "BTCUSDT")
+    property string timeframe: setting("timeframe", "15m")
+    property color buyColor: setting("buyColor", "#00ff00")
+    property color sellColor: setting("sellColor", "#ff0000")
+    property color holdColor: setting("holdColor", "#ffff00")
+    property int updateInterval: setting("updateInterval", 60000) // ms
 
-    // Update color based on signal
-    onSignal: {
-        if (signal === "BUY")
-            signalColor = "#00ff00" // Green
-        else if (signal === "SELL")
-            signalColor = "#ff0000" // Red
-        else
-            signalColor = "#ffff00" // Yellow
+    readonly property color signalColor: {
+        switch (signal) {
+            case "BUY": return buyColor
+            case "SELL": return sellColor
+            default: return holdColor
+        }
     }
 
-    // Define the size
-    implicitWidth: 80
+    property string tooltipText: "TradingView: " + symbol + " " + timeframe + " — " + signal
+
+    // Timer for periodic updates (placeholder for real data source)
+    Timer {
+        interval: updateInterval
+        running: true
+        repeat: true
+        onTriggered: {
+            // Placeholder: In production, fetch from Pine Script webhook, TradingView API, or local file
+            // updateSignal()
+        }
+    }
+
+    // Dynamic width based on text
+    readonly property int minWidth: 70
+    readonly property int maxWidth: 120
+
+    implicitWidth: Math.max(minWidth, Math.min(maxWidth, signalLabel.implicitWidth + Style.spacing.controlPaddingX * 2))
     implicitHeight: barSize
 
-    background: Rectangle {
+    // Visual indicator
+    Rectangle {
+        id: bgRect
+        anchors.fill: parent
         color: root.signalColor
         radius: 4
+        opacity: 0.9
+
+        // Pulse animation on signal change
+        SequentialAnimation on opacity {
+            running: false
+            NumberAnimation { from: 0.9; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
+            NumberAnimation { from: 1.0; to: 0.9; duration: 150; easing.type: Easing.InQuad }
+            loops: 2
+        }
     }
 
+    // Signal text
     Text {
         id: signalLabel
         text: root.signal
         color: "#000000"
         font.pixelSize: Style.font.body
+        font.weight: Font.Medium
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
+        width: parent.width - Style.spacing.controlPaddingX * 2
+    }
+
+    // Small indicator dot for visual emphasis
+    Rectangle {
+        width: 6
+        height: 6
+        radius: 3
+        color: "#000000"
+        opacity: 0.5
+        anchors.right: parent.right
+        anchors.rightMargin: 6
+        anchors.verticalCenter: parent.verticalCenter
+        visible: signal !== "HOLD"
     }
 
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+
         onClicked: {
-            // For now, just show a notification or open TradingView in browser
-            // In a real implementation, you might open a specific TradingView chart or alert page
-            Qt.openUrlExternally("https://www.tradingview.com/")
+            // Left click: open TradingView chart for the symbol
+            Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + symbol)
+        }
+        onPressAndHold: {
+            // Long press: open settings or show detailed menu
+            showContextMenu()
         }
         onEntered: if (root.bar) root.bar.showTooltip(root, root.tooltipText)
         onExited: if (root.bar) root.bar.hideTooltip(root)
     }
 
-    // Optional: Add a tooltip with more details
-    tooltip: root.tooltipText
+    // Context menu for quick actions
+    Menu {
+        id: contextMenu
+        MenuItem {
+            text: "Open TradingView Chart"
+            onTriggered: Qt.openUrlExternally("https://www.tradingview.com/chart/?symbol=" + symbol)
+        }
+        MenuItem {
+            text: "Copy Symbol"
+            onTriggered: Qt.clipboard.copy(symbol)
+        }
+        MenuItem {
+            text: "Force Update"
+            onTriggered: {
+                // trigger manual update
+                console.log("Manual update triggered")
+            }
+        }
+        MenuSeparator { }
+        MenuItem {
+            text: "Configure..."
+            onTriggered: {
+                // Could open a settings dialog
+                console.log("Settings requested")
+            }
+        }
+    }
+
+    function showContextMenu() {
+        contextMenu.popup()
+    }
+
+    function updateSignal(newSignal) {
+        if (newSignal !== signal) {
+            signal = newSignal
+            bgRect.opacity = 0.9
+            // Trigger pulse animation
+            var anim = bgRect.opacity
+        }
+    }
+
+    // Expose update function for external triggers (e.g., from a service)
+    Connections {
+        target: Quickshell
+        onMessageReceived: {
+            if (message.module === moduleName && message.action === "updateSignal") {
+                updateSignal(message.signal)
+            }
+        }
+    }
 }

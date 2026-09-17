@@ -1,0 +1,34 @@
+// Pine Script v5 Example for TradingView Alerts
+// Add this to your TradingView Pine Script to send webhooks to the Omarchy plugin
+
+//@version=5
+strategy("Omarchy TradingView Signals", overlay=true)
+
+// Input settings
+webhook_url = input.string("http://localhost:8080/webhook", "Webhook URL")
+symbol = input.symbol("BTCUSDT", "Symbol")
+timeframe = input.timeframe("15m", "Timeframe")
+
+// Example strategy: EMA Crossover
+fast_ema = ta.ema(close, 9)
+slow_ema = ta.ema(close, 21)
+
+// Signals
+buy_signal = ta.crossover(fast_ema, slow_ema)
+sell_signal = ta.crossunder(fast_ema, slow_ema)
+
+// Plot EMAs
+plot(fast_ema, color=color.green, title="Fast EMA")
+plot(slow_ema, color=color.red, title="Slow EMA")
+
+// Plot buy/sell signals
+plotshape(buy_signal, title="Buy Signal", location=location.belowbar, color=color.green, style=shape.labelup, text="BUY", textcolor=color.white, size=size.small)
+plotshape(sell_signal, title="Sell Signal", location=location.abovebar, color=color.red, style=shape.labeldown, text="SELL", textcolor=color.white, size=size.small)
+
+// Alert conditions
+alertcondition(buy_signal, title="Buy Alert", message='{"symbol": "' + symbol + '", "signal": "BUY", "price": ' + str.tostring(close) + ', "timeframe": "' + timeframe + '"}')
+alertcondition(sell_signal, title="Sell Alert", message='{"symbol": "' + symbol + '", "signal": "SELL", "price": ' + str.tostring(close) + ', "timeframe": "' + timeframe + '"}')
+
+// For webhook alerts, use the "Webhook URL" notification in TradingView alert creation
+// Set the webhook URL to: http://your-server:8080/webhook
+// The message format should be JSON as shown above

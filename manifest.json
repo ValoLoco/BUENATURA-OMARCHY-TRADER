@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.ValoLoco.tradingview-signals",
   "name": "TradingView Signals",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "ValoLoco",
   "license": "MIT",
   "description": "Omarchy TradingView and Pine Script signal plugin for top-bar alerts and trading workflow notifications.",
@@ -17,6 +17,50 @@
     "description": "Shows TradingView signals and allows trading workflow notifications",
     "category": "Trading",
     "allowMultiple": false,
-    "defaultSection": "right"
+    "defaultSection": "right",
+    "settings": [
+      {
+        "id": "symbol",
+        "type": "string",
+        "label": "Trading Symbol",
+        "default": "BTCUSDT",
+        "description": "TradingView symbol (e.g., BTCUSDT, ETHUSDT, AAPL)"
+      },
+      {
+        "id": "timeframe",
+        "type": "string",
+        "label": "Timeframe",
+        "default": "15m",
+        "description": "Chart timeframe for signal analysis"
+      },
+      {
+        "id": "buyColor",
+        "type": "color",
+        "label": "Buy Signal Color",
+        "default": "#00ff00",
+        "description": "Color for BUY signals"
+      },
+      {
+        "id": "sellColor",
+        "type": "color",
+        "label": "Sell Signal Color",
+        "default": "#ff0000",
+        "description": "Color for SELL signals"
+      },
+      {
+        "id": "holdColor",
+        "type": "color",
+        "label": "Hold Signal Color",
+        "default": "#ffff00",
+        "description": "Color for HOLD signals"
+      },
+      {
+        "id": "updateInterval",
+        "type": "number",
+        "label": "Update Interval (ms)",
+        "default": 60000,
+        "description": "How often to check for signal updates"
+      }
+    ]
   }
 }
